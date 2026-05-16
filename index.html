@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KEY MASTER">
+<meta name="theme-color" content="#0a0a0f">
+<title>KEY MASTER — Steganography Toolkit</title>
+<link rel="manifest" href="#" id="manifest-link">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --card: #1a1a26;
+  --border: rgba(120,80,255,0.2);
+  --accent: #7c4dff;
+  --accent2: #00e5ff;
+  --accent3: #ff4081;
+  --text: #f0eeff;
+  --muted: #8888aa;
+  --success: #00e676;
+  --warn: #ffb300;
+  --danger: #ff5252;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; font-family: 'SF Pro Display', -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+
+/* LAYOUT */
+#app { display: flex; flex-direction: column; height: 100dvh; max-width: 480px; margin: 0 auto; position: relative; }
+
+/* HEADER */
+#header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 10px;
+  background: linear-gradient(180deg, #0a0a0f 0%, rgba(10,10,15,0.95) 100%);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, #7c4dff 0%, #00e5ff 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.logo-text { font-size: 17px; font-weight: 700; letter-spacing: 1.5px; color: var(--text); }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+#back-btn {
+  display: none; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--accent2);
+  font-size: 14px; cursor: pointer; padding: 6px 10px 6px 0;
+}
+#back-btn svg { width: 18px; height: 18px; }
+
+/* SCROLL AREA */
+#screen-home, #screen-tool { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+#screen-tool { display: none; padding: 16px; }
+
+/* BOTTOM NAV */
+#bottom-nav {
+  display: flex; border-top: 1px solid var(--border);
+  background: rgba(10,10,15,0.98);
+  flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 4px; background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 10px; letter-spacing: 0.5px; transition: color 0.2s;
+}
+.nav-tab svg { width: 22px; height: 22px; }
+.nav-tab.active { color: var(--accent); }
+.nav-tab.active svg { filter: drop-shadow(0 0 6px #7c4dff66); }
+
+/* CATEGORY SECTIONS */
+.cat-header {
+  padding: 16px 16px 8px;
+  font-size: 11px; letter-spacing: 2px; color: var(--muted);
+  text-transform: uppercase; font-weight: 600;
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 8px; }
+.grid-1 { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 0 16px 8px; }
+
+/* TOOL CARD */
+.tool-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 12px; cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;
+}
+.tool-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  opacity: 0; transition: opacity 0.2s;
+}
+.tool-card:active { transform: scale(0.97); background: #1e1e2e; }
+.tool-card .tc-icon { font-size: 22px; line-height: 1; }
+.tool-card .tc-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.tool-card .tc-desc { font-size: 11px; color: var(--muted); line-height: 1.3; }
+.tool-card .tc-badge {
+  align-self: flex-start; font-size: 9px; letter-spacing: 1px;
+  padding: 2px 7px; border-radius: 20px; font-weight: 600;
+}
+.badge-encode { background: rgba(124,77,255,0.2); color: #b388ff; border: 1px solid rgba(124,77,255,0.3); }
+.badge-analyze { background: rgba(0,229,255,0.15); color: #80d8ff; border: 1px solid rgba(0,229,255,0.25); }
+.badge-attack { background: rgba(255,64,129,0.15); color: #ff80ab; border: 1px solid rgba(255,64,129,0.25); }
+.badge-export { background: rgba(0,230,118,0.15); color: #69f0ae; border: 1px solid rgba(0,230,118,0.25); }
+
+.col-encode::before { background: linear-gradient(90deg, #7c4dff, #b388ff); opacity: 1; }
+.col-analyze::before { background: linear-gradient(90deg, #00e5ff, #80d8ff); opacity: 1; }
+.col-attack::before { background: linear-gradient(90deg, #ff4081, #ff80ab); opacity: 1; }
+.col-export::before { background: linear-gradient(90deg, #00e676, #69f0ae); opacity: 1; }
+
+/* TOOL SCREEN */
+.tool-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.tool-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+/* FORM ELEMENTS */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; font-weight: 600; }
+.field input[type=text], .field textarea, .field select {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 14px;
+  padding: 12px 14px; outline: none; font-family: inherit;
+  transition: border-color 0.2s;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
+.field textarea { min-height: 80px; resize: vertical; }
+.field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238888aa' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.field select option { background: #1a1a26; }
+
+.upload-zone {
+  border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
+  padding: 20px 14px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s; background: var(--surface);
+}
+.upload-zone:active { border-color: var(--accent); }
+.upload-zone .uz-icon { font-size: 28px; margin-bottom: 6px; }
+.upload-zone .uz-text { font-size: 13px; color: var(--muted); }
+.upload-zone .uz-name { font-size: 13px; color: var(--accent2); margin-top: 4px; word-break: break-all; }
+.upload-zone input { display: none; }
+
+/* BUTTONS */
+.btn {
+  width: 100%; padding: 15px; border-radius: var(--radius-sm); border: none;
+  font-size: 15px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: linear-gradient(135deg, #7c4dff, #b388ff); color: #fff; }
+.btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.btn-danger { background: linear-gradient(135deg, #ff4081, #ff80ab); color: #fff; }
+.btn-success { background: linear-gradient(135deg, #00c853, #00e676); color: #000; }
+
+/* RESULTS */
+#result-box {
+  margin-top: 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; display: none;
+}
+.result-label { font-size: 11px; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+.result-text { font-size: 14px; color: var(--text); word-break: break-all; line-height: 1.6; }
+.result-ok { border-color: rgba(0,230,118,0.4); }
+.result-warn { border-color: rgba(255,179,0,0.4); }
+.result-err { border-color: rgba(255,82,82,0.4); }
+
+.stat-row { display: flex; justify-content: space-between; margin: 6px 0; font-size: 13px; }
+.stat-row .sk { color: var(--muted); }
+.stat-row .sv { color: var(--text); font-family: 'SF Mono', monospace; font-size: 12px; }
+
+/* PROGRESS */
+.progress-wrap { margin: 10px 0; }
+.progress-bar {
+  height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, #7c4dff, #00e5ff);
+  border-radius: 2px; width: 0%; transition: width 0.3s;
+}
+
+/* HISTOGRAM */
+.hist-wrap { margin: 10px 0; }
+.hist-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+.hist-label { font-size: 11px; color: var(--muted); width: 14px; font-weight: 700; }
+.hist-bar-bg { flex: 1; height: 8px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+.hist-bar-fill { height: 100%; border-radius: 4px; }
+.hist-pct { font-size: 11px; color: var(--muted); min-width: 38px; text-align: right; }
+
+/* BIT PLANE CANVAS */
+#bp-canvases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.bp-wrap { text-align: center; }
+.bp-wrap canvas { width: 100%; border-radius: 4px; image-rendering: pixelated; }
+.bp-wrap .bp-label { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+/* DIFF CANVAS */
+#diff-result canvas { width: 100%; border-radius: var(--radius-sm); max-width: 100%; }
+
+/* SPINNER */
+.spinner {
+  width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* SCANNER */
+.scan-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.scan-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.scan-name { font-size: 12px; flex: 1; word-break: break-all; color: var(--text); }
+.scan-chi { font-size: 11px; color: var(--muted); font-family: monospace; }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 10px 20px; font-size: 13px; color: var(--text); opacity: 0;
+  transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 100;
+  max-width: 90vw; text-align: center;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* TABS */
+.tabs { display: flex; gap: 0; margin-bottom: 16px; background: var(--surface); border-radius: var(--radius-sm); padding: 3px; }
+.tab-btn { flex: 1; padding: 8px 4px; border: none; background: none; color: var(--muted); font-size: 12px; border-radius: 8px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.tab-btn.active { background: var(--card); color: var(--text); }
+
+/* HIDDEN */
+.hidden { display: none !important; }
+
+/* CANVAS (output preview) */
+#img-preview { width: 100%; border-radius: var(--radius-sm); margin-top: 10px; display: none; }
+#output-canvas { display: none; }
+
+/* Section within tool */
+.section-sep { margin: 14px 0; height: 1px; background: var(--border); }
+
+/* Glow effect on active card */
+@keyframes pulse-border { 0%, 100% { box-shadow: 0 0 0 0 rgba(124,77,255,0); } 50% { box-shadow: 0 0 12px 2px rgba(124,77,255,0.25); } }
+.processing { animation: pulse-border 1s ease-in-out infinite; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* About page */
+.about-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 0 16px 12px; }
+.about-title { font-size: 13px; font-weight: 700; color: var(--accent2); margin-bottom: 8px; letter-spacing: 1px; }
+.about-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.about-row:last-child { border-bottom: none; }
+.about-k { color: var(--muted); }
+.about-v { color: var(--text); }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- HEADER -->
+  <div id="header">
+    <button id="back-btn" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      Назад
+    </button>
+    <div class="logo-wrap" id="logo-main">
+      <div class="logo-icon">🔐</div>
+      <div>
+        <div class="logo-text">KEY MASTER</div>
+        <div class="logo-sub">STEGANOGRAPHY TOOLKIT</div>
+      </div>
+    </div>
+    <div style="width:36px"></div>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div id="screen-home">
+    <div class="cat-header">— КОДИРОВАНИЕ</div>
+    <div class="grid-2">
+      <div class="tool-card col-encode" onclick="openTool('encode-text')">
+        <span class="tc-icon">🔏</span>
+        <div class="tc-name">Спрятать текст</div>
+        <div class="tc-desc">LSB + XOR шифр</div>
+        <span class="tc-badge badge-encode">ENCODE</span>
+      </div>
+      <div class="tool-card col-encode" onclick="openTool('decode-text')">
+        <span class="tc-icon">🔓</span>
+        <div class="tc-name">Извлечь текст</div>
+        <div class="tc-desc">LSB decode + XOR</div>
+        <span class="tc-badge badge-encode">DECODE</span>
+      </div>
+      <div class="tool-card col-encode" onclick="openTool('encode-file')">
+        <span class="tc-icon">📁</span>
+        <div class="tc-name">Спрятать файл</div>
+        <div class="tc-desc">Любой файл в PNG</div>
+        <span class="tc-badge badge-encode">ENCODE</span>
+      </div>
+      <div class="tool-card col-encode" onclick="openTool('decode-file')">
+        <span class="tc-icon">📂</span>
+        <div class="tc-name">Извлечь файл</div>
+        <div class="tc-desc">Достать из PNG</div>
+        <span class="tc-badge badge-encode">DECODE</span>
+      </div>
+    </div>
+
+    <div class="cat-header">— АНАЛИЗ</div>
+    <div class="grid-2">
+      <div class="tool-card col-analyze" onclick="openTool('detector')">
+        <span class="tc-icon">🔬</span>
+        <div class="tc-name">Детектор стего</div>
+        <div class="tc-desc">Chi-square тест</div>
+        <span class="tc-badge badge-analyze">ANALYZE</span>
+      </div>
+      <div class="tool-card col-analyze" onclick="openTool('metadata')">
+        <span class="tc-icon">🗂️</span>
+        <div class="tc-name">Метаданные</div>
+        <div class="tc-desc">EXIF + хеши</div>
+        <span class="tc-badge badge-analyze">ANALYZE</span>
+      </div>
+      <div class="tool-card col-analyze" onclick="openTool('lsb-map')">
+        <span class="tc-icon">🗺️</span>
+        <div class="tc-name">LSB-карта</div>
+        <div class="tc-desc">Визуализация LSB</div>
+        <span class="tc-badge badge-analyze">ANALYZE</span>
+      </div>
+      <div class="tool-card col-analyze" onclick="openTool('diff')">
+        <span class="tc-icon">🔀</span>
+        <div class="tc-name">Image Diff</div>
+        <div class="tc-desc">Сравнить два файла</div>
+        <span class="tc-badge badge-analyze">ANALYZE</span>
+      </div>
+    </div>
+    <div class="grid-1">
+      <div class="tool-card col-analyze" onclick="openTool('bitplane')">
+        <span class="tc-icon">🧮</span>
+        <div class="tc-name">Bit Plane Viewer</div>
+        <div class="tc-desc">24 бит-плейна (8 бит × 3 канала)</div>
+        <span class="tc-badge badge-analyze">ANALYZE</span>
+      </div>
+    </div>
+
+    <div class="cat-header">— АТАКИ</div>
+    <div class="grid-2">
+      <div class="tool-card col-attack" onclick="openTool('xor-brute')">
+        <span class="tc-icon">⚡</span>
+        <div class="tc-name">XOR Брутфорс</div>
+        <div class="tc-desc">Взлом по тексту</div>
+        <span class="tc-badge badge-attack">ATTACK</span>
+      </div>
+      <div class="tool-card col-attack" onclick="openTool('scanner')">
+        <span class="tc-icon">📡</span>
+        <div class="tc-name">Сканер файлов</div>
+        <div class="tc-desc">Поиск стего</div>
+        <span class="tc-badge badge-attack">ATTACK</span>
+      </div>
+    </div>
+
+    <div class="cat-header">— ЭКСПОРТ</div>
+    <div class="grid-1">
+      <div class="tool-card col-export" onclick="openTool('html-report')">
+        <span class="tc-icon">📋</span>
+        <div class="tc-name">HTML-отчёт</div>
+        <div class="tc-desc">Красивый экспорт анализа в HTML файл</div>
+        <span class="tc-badge badge-export">EXPORT</span>
+      </div>
+    </div>
+    <div style="height: 16px;"></div>
+  </div>
+
+  <!-- TOOL SCREEN -->
+  <div id="screen-tool"></div>
+
+  <!-- BOTTOM NAV -->
+  <div id="bottom-nav">
+    <button class="nav-tab active" id="tab-home" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      Главная
+    </button>
+    <button class="nav-tab" id="tab-about" onclick="switchTab('about')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+      </svg>
+      О приложении
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- HIDDEN CANVASES -->
+<canvas id="output-canvas"></canvas>
+<img id="img-preview" alt="preview">
+
+<script>
+// ═══════════════════════════════
+//  CORE UTILS
+// ═══════════════════════════════
+const MAGIC_TEXT = [0xDE,0xAD,0xBE,0xEF];
+const MAGIC_FILE = [0xCA,0xFE,0xBA,0xBE];
+const VERSION = 2;
+
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function goHome() {
+  document.getElementById('screen-home').style.display = '';
+  document.getElementById('screen-tool').style.display = 'none';
+  document.getElementById('back-btn').style.display = 'none';
+  document.getElementById('logo-main').style.display = '';
+}
+
+let currentTab = 'home';
+function switchTab(tab) {
+  if (tab === currentTab && tab === 'home') return;
+  currentTab = tab;
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  goHome();
+  if (tab === 'about') showAbout();
+  else {
+    document.getElementById('screen-home').style.display = '';
+  }
+}
+
+function showAbout() {
+  const sh = document.getElementById('screen-home');
+  sh.innerHTML = `
+  <div style="padding:16px 0">
+    <div class="about-card">
+      <div class="about-title">🔐 KEY MASTER v2.0</div>
+      <div class="about-row"><span class="about-k">Версия</span><span class="about-v">2.0 CTF Edition</span></div>
+      <div class="about-row"><span class="about-k">Платформы</span><span class="about-v">Android · iOS · Web</span></div>
+      <div class="about-row"><span class="about-k">Формат</span><span class="about-v">PWA (оффлайн)</span></div>
+    </div>
+    <div class="about-card">
+      <div class="about-title">📋 ИНСТРУМЕНТЫ</div>
+      <div class="about-row"><span class="about-k">LSB Encode/Decode</span><span class="about-v">+ XOR</span></div>
+      <div class="about-row"><span class="about-k">File Embed/Extract</span><span class="about-v">PNG</span></div>
+      <div class="about-row"><span class="about-k">Stego Detector</span><span class="about-v">Chi-square</span></div>
+      <div class="about-row"><span class="about-k">Metadata Analyzer</span><span class="about-v">EXIF + Hashes</span></div>
+      <div class="about-row"><span class="about-k">LSB Map Viewer</span><span class="about-v">R/G/B каналы</span></div>
+      <div class="about-row"><span class="about-k">Image Diff</span><span class="about-v">×усиление</span></div>
+      <div class="about-row"><span class="about-k">Bit Plane Viewer</span><span class="about-v">24 плейна</span></div>
+      <div class="about-row"><span class="about-k">XOR Bruteforce</span><span class="about-v">Known plaintext</span></div>
+      <div class="about-row"><span class="about-k">Multi-file Scanner</span><span class="about-v">batch анализ</span></div>
+      <div class="about-row"><span class="about-k">HTML Report</span><span class="about-v">экспорт</span></div>
+    </div>
+    <div class="about-card">
+      <div class="about-title">📱 УСТАНОВКА (PWA)</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8">
+        <b style="color:var(--text)">Android:</b> Chrome → ⋮ → «Добавить на главный экран»<br>
+        <b style="color:var(--text)">iOS:</b> Safari → Поделиться → «На экран Домой»<br>
+        <b style="color:var(--text)">Desktop:</b> Chrome → адресная строка → кнопка установки
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>`;
+}
+
+// ═══════════════════════════════
+//  FILE READER HELPERS
+// ═══════════════════════════════
+function readFileAsArrayBuffer(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function loadImageData(file) {
+  const dataUrl = await readFileAsDataURL(file);
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const id = ctx.getImageData(0, 0, img.width, img.height);
+      res({ imageData: id, width: img.width, height: img.height, canvas: c, ctx });
+    };
+    img.onerror = rej;
+    img.src = dataUrl;
+  });
+}
+
+function canvasToBlob(canvas, mime = 'image/png') {
+  return new Promise(res => canvas.toBlob(res, mime));
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+function downloadText(text, filename) {
+  const blob = new Blob([text], { type: 'text/html;charset=utf-8' });
+  downloadBlob(blob, filename);
+}
+
+// ═══════════════════════════════
+//  XOR CRYPTO
+// ═══════════════════════════════
+function xorCrypt(data, key) {
+  if (!key) return data;
+  const kb = new TextEncoder().encode(key);
+  const out = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) out[i] = data[i] ^ kb[i % kb.length];
+  return out;
+}
+
+// ═══════════════════════════════
+//  LSB UTILS
+// ═══════════════════════════════
+function bytesToBits(data) {
+  const bits = [];
+  for (const byte of data) for (let i = 7; i >= 0; i--) bits.push((byte >> i) & 1);
+  return bits;
+}
+
+function bitsToBytes(bits) {
+  const out = [];
+  for (let i = 0; i < bits.length - 7; i += 8) {
+    let byte = 0;
+    for (let j = 0; j < 8; j++) byte = (byte << 1) | bits[i+j];
+    out.push(byte);
+  }
+  return new Uint8Array(out);
+}
+
+function embedBits(pixels, bits, channels = 3) {
+  const data = new Uint8ClampedArray(pixels);
+  let bi = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    for (let c = 0; c < channels && bi < bits.length; c++, bi++) {
+      data[i+c] = (data[i+c] & ~1) | bits[bi];
+    }
+  }
+  return data;
+}
+
+function extractBits(pixels, nBits, channels = 3) {
+  const bits = [];
+  for (let i = 0; i < pixels.length && bits.length < nBits; i += 4) {
+    for (let c = 0; c < channels && bits.length < nBits; c++) {
+      bits.push(pixels[i+c] & 1);
+    }
+  }
+  return bits;
+}
+
+// ═══════════════════════════════
+//  HASH UTILS
+// ═══════════════════════════════
+async function sha256hex(data) {
+  const buf = await crypto.subtle.digest('SHA-256', data instanceof ArrayBuffer ? data : data.buffer);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function md5hex(data) {
+  // Simple MD5 implementation
+  function md5(arr) {
+    const r=[7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+    const K=Array.from({length:64},(_,i)=>Math.floor(Math.abs(Math.sin(i+1))*2**32)>>>0);
+    let h0=0x67452301,h1=0xEFCDAB89,h2=0x98BADCFE,h3=0x10325476;
+    const msg=[...arr];
+    const orig=msg.length*8;
+    msg.push(0x80);
+    while(msg.length%64!==56)msg.push(0);
+    for(let i=0;i<8;i++)msg.push((orig/2**(i*8))&0xFF);
+    for(let i=0;i<msg.length;i+=64){
+      const w=Array.from({length:16},(_,j)=>msg[i+j*4]|(msg[i+j*4+1]<<8)|(msg[i+j*4+2]<<16)|(msg[i+j*4+3]<<24));
+      let [a,b,c,d]=[h0,h1,h2,h3];
+      for(let j=0;j<64;j++){
+        let f,g;
+        if(j<16){f=(b&c)|(~b&d);g=j;}
+        else if(j<32){f=(d&b)|(~d&c);g=(5*j+1)%16;}
+        else if(j<48){f=b^c^d;g=(3*j+5)%16;}
+        else{f=c^(b|(~d));g=(7*j)%16;}
+        f=(f+a+K[j]+w[g])>>>0;
+        a=d;d=c;c=b;
+        b=(b+((f<<r[j])|(f>>>(32-r[j]))))>>>0;
+      }
+      h0=(h0+a)>>>0;h1=(h1+b)>>>0;h2=(h2+c)>>>0;h3=(h3+d)>>>0;
+    }
+    return [h0,h1,h2,h3].map(h=>[h&0xFF,(h>>8)&0xFF,(h>>16)&0xFF,(h>>24)&0xFF].map(b=>b.toString(16).padStart(2,'0')).join('')).join('');
+  }
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  return md5([...bytes]);
+}
+
+// ═══════════════════════════════
+//  CHI-SQUARE TEST
+// ═══════════════════════════════
+function chiSquareTest(values) {
+  if (values.length < 100) return { chi2: 0, verdict: 'мало данных' };
+  const freq = new Array(256).fill(0);
+  for (const v of values) freq[v]++;
+  let chi2 = 0, pairs = 0;
+  for (let i = 0; i < 256; i += 2) {
+    const exp = (freq[i] + freq[i+1]) / 2;
+    if (exp > 0) {
+      chi2 += ((freq[i]-exp)**2 + (freq[i+1]-exp)**2) / exp;
+      pairs++;
+    }
+  }
+  const norm = pairs ? chi2 / pairs : 0;
+  let verdict;
+  if (norm < 1.0) verdict = '⚠ ВЫСОКАЯ вероятность стего';
+  else if (norm < 3.0) verdict = '? Умеренное подозрение';
+  else verdict = '✓ Скорее всего чисто';
+  return { chi2: norm, verdict };
+}
+
+// ═══════════════════════════════
+//  ENTROPY
+// ═══════════════════════════════
+function calcEntropy(values) {
+  const freq = new Array(256).fill(0);
+  for (const v of values) freq[v]++;
+  let ent = 0;
+  for (const f of freq) {
+    if (f > 0) { const p = f / values.length; ent -= p * Math.log2(p); }
+  }
+  return ent;
+}
+
+// ═══════════════════════════════
+//  TOOL ROUTER
+// ═══════════════════════════════
+function openTool(id) {
+  const st = document.getElementById('screen-tool');
+  const sh = document.getElementById('screen-home');
+  sh.style.display = 'none';
+  st.style.display = 'block';
+  st.innerHTML = '';
+  document.getElementById('back-btn').style.display = 'flex';
+  document.getElementById('logo-main').style.display = 'none';
+  renderTool(id, st);
+}
+
+function renderTool(id, container) {
+  const tools = {
+    'encode-text': renderEncodeText,
+    'decode-text': renderDecodeText,
+    'encode-file': renderEncodeFile,
+    'decode-file': renderDecodeFile,
+    'detector': renderDetector,
+    'metadata': renderMetadata,
+    'lsb-map': renderLsbMap,
+    'diff': renderDiff,
+    'bitplane': renderBitPlane,
+    'xor-brute': renderXorBrute,
+    'scanner': renderScanner,
+    'html-report': renderHtmlReport,
+  };
+  if (tools[id]) tools[id](container);
+}
+
+// ═══════════════════════════════
+//  TOOL: ENCODE TEXT
+// ═══════════════════════════════
+function renderEncodeText(c) {
+  c.innerHTML = `
+  <div class="tool-title">🔏 Спрятать текст</div>
+  <div class="tool-subtitle">LSB-кодирование + опциональный XOR</div>
+  <div class="field"><label>ИСХОДНОЕ ИЗОБРАЖЕНИЕ</label>
+    <div class="upload-zone" onclick="document.getElementById('et-img').click()">
+      <div class="uz-icon">🖼️</div>
+      <div class="uz-text">Нажми для выбора</div>
+      <div class="uz-name" id="et-img-name">—</div>
+      <input type="file" id="et-img" accept="image/*" onchange="previewImg(this,'et-img-name','et-preview')">
+    </div>
+    <img id="et-preview" style="display:none;width:100%;margin-top:8px;border-radius:10px" alt="">
+  </div>
+  <div class="field"><label>ТЕКСТ ДЛЯ СКРЫТИЯ</label><textarea id="et-msg" placeholder="Введи секретное сообщение..."></textarea></div>
+  <div class="field"><label>XOR-КЛЮЧ (необязательно)</label><input type="text" id="et-key" placeholder="Оставь пустым — без шифрования"></div>
+  <div class="field"><label>КАНАЛОВ</label>
+    <select id="et-ch"><option value="1">1 — только R</option><option value="2">2 — R + G</option><option value="3" selected>3 — R + G + B (макс)</option></select>
+  </div>
+  <button class="btn btn-primary" onclick="doEncodeText()">
+    <span id="et-spin" class="spinner"></span>
+    🔏 Закодировать и скачать
+  </button>
+  <div id="result-box"></div>`;
+}
+
+async function doEncodeText() {
+  const imgFile = document.getElementById('et-img').files[0];
+  const msg = document.getElementById('et-msg').value;
+  const key = document.getElementById('et-key').value;
+  const ch = parseInt(document.getElementById('et-ch').value);
+  if (!imgFile || !msg) { showToast('❌ Выбери картинку и введи текст'); return; }
+
+  toggleSpinner('et-spin', true);
+  try {
+    const { imageData, width, height } = await loadImageData(imgFile);
+    let payload = new TextEncoder().encode(msg);
+    if (key) payload = xorCrypt(payload, key);
+
+    const xorFlag = key ? 1 : 0;
+    const len = payload.length;
+    const header = new Uint8Array([...MAGIC_TEXT, VERSION, xorFlag, (len>>24)&0xFF,(len>>16)&0xFF,(len>>8)&0xFF,len&0xFF]);
+    const full = new Uint8Array(header.length + payload.length);
+    full.set(header); full.set(payload, header.length);
+
+    const bits = bytesToBits(full);
+    const capacity = (imageData.data.length / 4) * ch;
+    if (bits.length > capacity) {
+      showResult('❌ Сообщение слишком длинное для этого изображения', 'err');
+      return;
+    }
+
+    const newData = embedBits(imageData.data, bits, ch);
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = width; outCanvas.height = height;
+    const ctx = outCanvas.getContext('2d');
+    ctx.putImageData(new ImageData(newData, width, height), 0, 0);
+    const blob = await canvasToBlob(outCanvas);
+    downloadBlob(blob, 'stego_' + imgFile.name.replace(/\.[^.]+$/, '') + '.png');
+
+    const usedPx = Math.ceil(bits.length / ch);
+    showResult(`✅ Готово!\n📊 Символов: ${msg.length}\n📦 Байт: ${full.length}\n🖼️ Пикселей: ${usedPx.toLocaleString()} из ${(width*height).toLocaleString()}\n📉 Нагрузка: ${(usedPx/(width*height)*100).toFixed(3)}%${key?' \n🔐 XOR: "'+key+'"':''}`, 'ok');
+  } catch(e) { showResult('❌ Ошибка: ' + e.message, 'err'); }
+  toggleSpinner('et-spin', false);
+}
+
+// ═══════════════════════════════
+//  TOOL: DECODE TEXT
+// ═══════════════════════════════
+function renderDecodeText(c) {
+  c.innerHTML = `
+  <div class="tool-title">🔓 Извлечь текст</div>
+  <div class="tool-subtitle">LSB-декодирование + XOR расшифровка</div>
+  <div class="field"><label>ИЗОБРАЖЕНИЕ СО СКРЫТЫМ ТЕКСТОМ</label>
+    <div class="upload-zone" onclick="document.getElementById('dt-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">Нажми для выбора</div>
+      <div class="uz-name" id="dt-img-name">—</div>
+      <input type="file" id="dt-img" accept="image/*" onchange="previewImg(this,'dt-img-name','dt-preview')">
+    </div>
+    <img id="dt-preview" style="display:none;width:100%;margin-top:8px;border-radius:10px" alt="">
+  </div>
+  <div class="field"><label>XOR-КЛЮЧ (если использовался)</label><input type="text" id="dt-key" placeholder="Оставь пустым — без шифрования"></div>
+  <div class="field"><label>КАНАЛОВ</label>
+    <select id="dt-ch"><option value="1">1 — только R</option><option value="2">2 — R + G</option><option value="3" selected>3 — R + G + B</option></select>
+  </div>
+  <button class="btn btn-primary" onclick="doDecodeText()">
+    <span id="dt-spin" class="spinner"></span>
+    🔓 Извлечь сообщение
+  </button>
+  <div id="result-box"></div>`;
+}
+
+async function doDecodeText() {
+  const imgFile = document.getElementById('dt-img').files[0];
+  const key = document.getElementById('dt-key').value;
+  const ch = parseInt(document.getElementById('dt-ch').value);
+  if (!imgFile) { showToast('❌ Выбери изображение'); return; }
+
+  toggleSpinner('dt-spin', true);
+  try {
+    const { imageData } = await loadImageData(imgFile);
+    const px = imageData.data;
+
+    const headerBits = extractBits(px, 80, ch);
+    const hdr = bitsToBytes(headerBits);
+
+    if (!arrEq(hdr, MAGIC_TEXT)) {
+      showResult('❌ Сигнатура не найдена.\nВозможно, изображение не содержит скрытого текста или использовалось другое количество каналов.', 'warn');
+      toggleSpinner('dt-spin', false); return;
+    }
+
+    const ver = hdr[4], xorFlag = hdr[5];
+    const length = (hdr[6]<<24)|(hdr[7]<<16)|(hdr[8]<<8)|hdr[9];
+    const totalBits = (10 + length) * 8;
+    const allBits = extractBits(px, totalBits, ch);
+    const allBytes = bitsToBytes(allBits);
+    let payload = allBytes.slice(10, 10 + length);
+
+    if (xorFlag) {
+      if (!key) { showResult(`⚠️ Сообщение было зашифровано XOR!\nУкажи ключ для расшифровки.\n\nЗашифровано (hex): ${bytesHex(payload.slice(0,32))}...`, 'warn'); toggleSpinner('dt-spin', false); return; }
+      payload = xorCrypt(payload, key);
+    }
+
+    let text;
+    try { text = new TextDecoder('utf-8', {fatal:true}).decode(payload); }
+    catch { showResult('❌ Ошибка декодирования UTF-8.\nВозможно, неверный XOR-ключ или неверное количество каналов.', 'err'); toggleSpinner('dt-spin', false); return; }
+
+    showResult(`✅ Сообщение найдено! (v${ver})\n${xorFlag?'🔐 XOR-расшифровка применена\n':''}\n💬 ${text}`, 'ok');
+  } catch(e) { showResult('❌ Ошибка: ' + e.message, 'err'); }
+  toggleSpinner('dt-spin', false);
+}
+
+// ═══════════════════════════════
+//  TOOL: ENCODE FILE
+// ═══════════════════════════════
+function renderEncodeFile(c) {
+  c.innerHTML = `
+  <div class="tool-title">📁 Спрятать файл</div>
+  <div class="tool-subtitle">Вшить любой файл в PNG-изображение</div>
+  <div class="field"><label>ИСХОДНОЕ ИЗОБРАЖЕНИЕ</label>
+    <div class="upload-zone" onclick="document.getElementById('ef-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">PNG/JPG контейнер</div>
+      <div class="uz-name" id="ef-img-name">—</div>
+      <input type="file" id="ef-img" accept="image/*" onchange="previewImg(this,'ef-img-name','ef-preview')">
+    </div>
+    <img id="ef-preview" style="display:none;width:100%;margin-top:8px;border-radius:10px" alt="">
+  </div>
+  <div class="field"><label>СКРЫВАЕМЫЙ ФАЙЛ</label>
+    <div class="upload-zone" onclick="document.getElementById('ef-sec').click()">
+      <div class="uz-icon">📎</div><div class="uz-text">Любой файл</div>
+      <div class="uz-name" id="ef-sec-name">—</div>
+      <input type="file" id="ef-sec" onchange="document.getElementById('ef-sec-name').textContent=this.files[0]?.name||'—'">
+    </div>
+  </div>
+  <div class="field"><label>XOR-КЛЮЧ (необязательно)</label><input type="text" id="ef-key" placeholder="Пусто — без шифрования"></div>
+  <button class="btn btn-primary" onclick="doEncodeFile()">
+    <span id="ef-spin" class="spinner"></span>
+    📁 Вшить файл
+  </button>
+  <div id="result-box"></div>`;
+}
+
+async function doEncodeFile() {
+  const imgFile = document.getElementById('ef-img').files[0];
+  const secFile = document.getElementById('ef-sec').files[0];
+  const key = document.getElementById('ef-key').value;
+  if (!imgFile || !secFile) { showToast('❌ Выбери изображение и файл'); return; }
+
+  toggleSpinner('ef-spin', true);
+  try {
+    const { imageData, width, height } = await loadImageData(imgFile);
+    let fileData = new Uint8Array(await readFileAsArrayBuffer(secFile));
+    if (key) fileData = xorCrypt(fileData, key);
+
+    const fname = new TextEncoder().encode(secFile.name);
+    const xorFlag = key ? 1 : 0;
+    const flen = fileData.length;
+    const hdr = new Uint8Array([...MAGIC_FILE, VERSION, xorFlag, fname.length, ...fname, (flen>>24)&0xFF,(flen>>16)&0xFF,(flen>>8)&0xFF,flen&0xFF]);
+    const full = new Uint8Array(hdr.length + fileData.length);
+    full.set(hdr); full.set(fileData, hdr.length);
+
+    const bits = bytesToBits(full);
+    const capacity = (imageData.data.length / 4) * 3;
+    if (bits.length > capacity) {
+      showResult(`❌ Файл слишком большой!\nДоступно: ${Math.floor(capacity/8).toLocaleString()} байт\nНужно: ${full.length.toLocaleString()} байт`, 'err');
+      toggleSpinner('ef-spin', false); return;
+    }
+
+    const newData = embedBits(imageData.data, bits, 3);
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = width; outCanvas.height = height;
+    outCanvas.getContext('2d').putImageData(new ImageData(newData, width, height), 0, 0);
+    const blob = await canvasToBlob(outCanvas);
+    downloadBlob(blob, 'stego_file.png');
+
+    showResult(`✅ Файл вшит!\n📎 "${secFile.name}" (${fileData.length.toLocaleString()} байт)\n📉 Нагрузка: ${(bits.length/capacity*100).toFixed(3)}%${key?'\n🔐 XOR применён':''}`, 'ok');
+  } catch(e) { showResult('❌ Ошибка: ' + e.message, 'err'); }
+  toggleSpinner('ef-spin', false);
+}
+
+// ═══════════════════════════════
+//  TOOL: DECODE FILE
+// ═══════════════════════════════
+function renderDecodeFile(c) {
+  c.innerHTML = `
+  <div class="tool-title">📂 Извлечь файл</div>
+  <div class="tool-subtitle">Достать скрытый файл из PNG</div>
+  <div class="field"><label>PNG СО СКРЫТЫМ ФАЙЛОМ</label>
+    <div class="upload-zone" onclick="document.getElementById('dff-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">Нажми для выбора</div>
+      <div class="uz-name" id="dff-img-name">—</div>
+      <input type="file" id="dff-img" accept="image/*" onchange="previewImg(this,'dff-img-name','dff-preview')">
+    </div>
+    <img id="dff-preview" style="display:none;width:100%;margin-top:8px;border-radius:10px" alt="">
+  </div>
+  <div class="field"><label>XOR-КЛЮЧ (если использовался)</label><input type="text" id="dff-key" placeholder="Пусто — без расшифровки"></div>
+  <button class="btn btn-primary" onclick="doDecodeFile()">
+    <span id="dff-spin" class="spinner"></span>
+    📂 Извлечь файл
+  </button>
+  <div id="result-box"></div>`;
+}
+
+async function doDecodeFile() {
+  const imgFile = document.getElementById('dff-img').files[0];
+  const key = document.getElementById('dff-key').value;
+  if (!imgFile) { showToast('❌ Выбери изображение'); return; }
+
+  toggleSpinner('dff-spin', true);
+  try {
+    const { imageData } = await loadImageData(imgFile);
+    const px = imageData.data;
+
+    const hBits = extractBits(px, 7*8);
+    const hdr = bitsToBytes(hBits);
+    if (!arrEq(hdr, MAGIC_FILE)) {
+      showResult('❌ FILE-сигнатура не найдена.\nЭто изображение не содержит скрытого файла (наш формат).', 'warn');
+      toggleSpinner('dff-spin', false); return;
+    }
+
+    const xorFlag = hdr[5], fnLen = hdr[6];
+    const full2Bits = extractBits(px, (7 + fnLen + 4) * 8);
+    const full2 = bitsToBytes(full2Bits);
+    const filename = new TextDecoder().decode(full2.slice(7, 7+fnLen));
+    const flen = (full2[7+fnLen]<<24)|(full2[8+fnLen]<<16)|(full2[9+fnLen]<<8)|full2[10+fnLen];
+
+    const totalBits = (11 + fnLen + flen) * 8;
+    const allBits = extractBits(px, totalBits);
+    const all = bitsToBytes(allBits);
+    let fileData = all.slice(11 + fnLen, 11 + fnLen + flen);
+
+    if (xorFlag && key) fileData = xorCrypt(fileData, key);
+    else if (xorFlag && !key) { showResult(`⚠️ Файл зашифрован XOR!\nУкажи ключ и повтори.`, 'warn'); toggleSpinner('dff-spin', false); return; }
+
+    const blob = new Blob([fileData]);
+    downloadBlob(blob, filename);
+    showResult(`✅ Файл извлечён!\n📎 "${filename}" (${flen.toLocaleString()} байт)${xorFlag?'\n🔐 XOR-расшифровка применена':''}`, 'ok');
+  } catch(e) { showResult('❌ Ошибка: ' + e.message, 'err'); }
+  toggleSpinner('dff-spin', false);
+}
+
+// ═══════════════════════════════
+//  TOOL: DETECTOR
+// ═══════════════════════════════
+function renderDetector(c) {
+  c.innerHTML = `
+  <div class="tool-title">🔬 Детектор стего</div>
+  <div class="tool-subtitle">Chi-square тест + LSB-анализ</div>
+  <div class="field"><label>ИЗОБРАЖЕНИЕ ДЛЯ АНАЛИЗА</label>
+    <div class="upload-zone" onclick="document.getElementById('det-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">Нажми для выбора</div>
+      <div class="uz-name" id="det-img-name">—</div>
+      <input type="file" id="det-img" accept="image/*" onchange="previewImg(this,'det-img-name','det-preview')">
+    </div>
+    <img id="det-preview" style="display:none;width:100%;margin-top:8px;border-radius:10px" alt="">
+  </div>
+  <button class="btn btn-primary" onclick="doDetect()">
+    <span id="det-spin" class="spinner"></span>
+    🔬 Анализировать
+  </button>
+  <div id="result-box"></div>`;
+}
+
+async function doDetect() {
+  const imgFile = document.getElementById('det-img').files[0];
+  if (!imgFile) { showToast('❌ Выбери изображение'); return; }
+  toggleSpinner('det-spin', true);
+  try {
+    const { imageData, width, height } = await loadImageData(imgFile);
+    const px = imageData.data;
+    const R=[], G=[], B=[];
+    for (let i=0;i<px.length;i+=4){R.push(px[i]);G.push(px[i+1]);B.push(px[i+2]);}
+
+    const chR = chiSquareTest(R), chG = chiSquareTest(G), chB = chiSquareTest(B);
+    const avg = (chR.chi2 + chG.chi2 + chB.chi2) / 3;
+
+    // LSB ratios
+    const lsbR = R.filter(v=>v&1).length/R.length;
+    const lsbG = G.filter(v=>v&1).length/G.length;
+    const lsbB = B.filter(v=>v&1).length/B.length;
+
+    const entR = calcEntropy(R), entG = calcEntropy(G), entB = calcEntropy(B);
+
+    // Signature check
+    const bits = extractBits(px, Math.min(px.length/4*3, 80), 3);
+    const hdr = bitsToBytes(bits);
+    const hasTxt = arrEq(hdr, MAGIC_TEXT);
+    const hasFile = arrEq(hdr, MAGIC_FILE);
+
+    const verdict = avg < 1.0 ? '🚨 ВЫСОКАЯ вероятность LSB-стего!' : avg < 3.0 ? '⚠️ Подозрительно' : '✅ Признаки не обнаружены';
+    const vClass = avg < 1.0 ? 'err' : avg < 3.0 ? 'warn' : 'ok';
+
+    const rb = document.getElementById('result-box');
+    rb.style.display = 'block';
+    rb.className = 'result-box result-' + vClass;
+    rb.innerHTML = `
+    <div class="result-label">РЕЗУЛЬТАТ АНАЛИЗА</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:12px;color:${avg<1?'var(--danger)':avg<3?'var(--warn)':'var(--success)'}">${verdict}</div>
+    <div class="stat-row"><span class="sk">Размер</span><span class="sv">${width}×${height} (${(R.length/1000).toFixed(1)}K пикс)</span></div>
+    <div class="stat-row"><span class="sk">Средний χ²</span><span class="sv">${avg.toFixed(4)}</span></div>
+    <div class="section-sep"></div>
+    <div class="result-label">CHI-SQUARE ПО КАНАЛАМ</div>
+    <div class="stat-row"><span class="sk">R</span><span class="sv">χ²=${chR.chi2.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="sk">G</span><span class="sv">χ²=${chG.chi2.toFixed(4)}</span></div>
+    <div class="stat-row"><span class="sk">B</span><span class="sv">χ²=${chB.chi2.toFixed(4)}</span></div>
+    <div class="section-sep"></div>
+    <div class="result-label">LSB-РАСПРЕДЕЛЕНИЕ</div>
+    <div class="hist-wrap">
+      ${histBar('R','#e74c3c',lsbR)}
+      ${histBar('G','#27ae60',lsbG)}
+      ${histBar('B','#3498db',lsbB)}
+    </div>
+    <div class="section-sep"></div>
+    <div class="result-label">ЭНТРОПИЯ</div>
+    <div class="stat-row"><span class="sk">R</span><span class="sv">${entR.toFixed(4)} / 8.0</span></div>
+    <div class="stat-row"><span class="sk">G</span><span class="sv">${entG.toFixed(4)} / 8.0</span></div>
+    <div class="stat-row"><span class="sk">B</span><span class="sv">${entB.toFixed(4)} / 8.0</span></div>
+    <div class="section-sep"></div>
+    <div class="result-label">СИГНАТУРЫ</div>
+    <div class="stat-row"><span class="sk">TEXT-сигнатура</span><span class="sv" style="color:${hasTxt?'var(--danger)':'var(--success)'}">${hasTxt?'⚠ НАЙДЕНА':'✓ Нет'}</span></div>
+    <div class="stat-row"><span class="sk">FILE-сигнатура</span><span class="sv" style="color:${hasFile?'var(--danger)':'var(--success)'}">${hasFile?'⚠ НАЙДЕНА':'✓ Нет'}</span></div>
+    `;
+  } catch(e) { showResult('❌ Ошибка: '+e.message,'err'); }
+  toggleSpinner('det-spin', false);
+}
+
+function histBar(label, color, ratio) {
+  return `<div class="hist-row">
+    <span class="hist-label" style="color:${color}">${label}</span>
+    <div class="hist-bar-bg"><div class="hist-bar-fill" style="width:${(ratio*100).toFixed(1)}%;background:${color}"></div></div>
+    <span class="hist-pct">${(ratio*100).toFixed(1)}%</span>
+  </div>`;
+}
+
+// ═══════════════════════════════
+//  TOOL: METADATA
+// ═══════════════════════════════
+function renderMetadata(c) {
+  c.innerHTML = `
+  <div class="tool-title">🗂️ Метаданные файла</div>
+  <div class="tool-subtitle">Хеши, размер, EXIF, строки</div>
+  <div class="field"><label>ФАЙЛ ДЛЯ АНАЛИЗА</label>
+    <div class="upload-zone" onclick="document.getElementById('meta-img').click()">
+      <div class="uz-icon">📎</div><div class="uz-text">Любой файл (фото, PNG, PDF...)</div>
+      <div class="uz-name" id="meta-img-name">—</div>
+      <input type="file" id="meta-img" onchange="document.getElementById('meta-img-name').textContent=this.files[0]?.name||'—'">
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="doMetadata()">
+    <span id="meta-spin" class="spinner"></span>
+    🗂️ Анализировать
+  </button>
+  <div id="result-box"></div>`;
+}
+
+async function doMetadata() {
+  const f = document.getElementById('meta-img').files[0];
+  if (!f) { showToast('❌ Выбери файл'); return; }
+  toggleSpinner('meta-spin', true);
+  try {
+    const ab = await readFileAsArrayBuffer(f);
+    const u8 = new Uint8Array(ab);
+    const sha = await sha256hex(ab);
+    const md = await md5hex(u8);
+    const ent = calcEntropy([...u8]);
+
+    // Magic bytes
+    const magic = u8.slice(0,8);
+    const fmtMap = [
+      [[0xFF,0xD8,0xFF],'JPEG'],[[0x89,0x50,0x4E,0x47],'PNG'],
+      [[0x47,0x49,0x46],'GIF'],[[0x25,0x50,0x44,0x46],'PDF'],
+      [[0x50,0x4B,0x03,0x04],'ZIP/DOCX'],[[0x7F,0x45,0x4C,0x46],'ELF'],
+      [[0xCA,0xFE,0xBA,0xBE],'Java/Mach-O fat'],[[0xDE,0xAD,0xBE,0xEF],'STEGANO-TEXT'],
+      [[0x4D,0x5A],'PE (EXE/DLL)'],[[0x1F,0x8B],'GZIP'],
+    ];
+    let fmt = 'Неизвестно';
+    for (const [sig, name] of fmtMap) {
+      if (sig.every((b,i) => u8[i]===b)) { fmt = name; break; }
+    }
+
+    // Strings
+    const interesting = [];
+    const keywords = ['password','secret','key','flag','ctf','token','author','gps','location','http','flag{','copyright'];
+    let cur = [];
+    for (const b of u8) {
+      if (b>=32&&b<=126) cur.push(String.fromCharCode(b));
+      else { if (cur.length>=6){ const s=cur.join(''); for(const k of keywords){if(s.toLowerCase().includes(k)){interesting.push(s);break;}} } cur=[]; }
+    }
+
+    const rb = document.getElementById('result-box');
+    rb.style.display='block'; rb.className='result-box result-ok';
+    rb.innerHTML = `
+    <div class="result-label">ИНФОРМАЦИЯ О ФАЙЛЕ</div>
+    <div class="stat-row"><span class="sk">Имя</span><span class="sv">${f.name}</span></div>
+    <div class="stat-row"><span class="sk">Размер</span><span class="sv">${f.size.toLocaleString()} байт (${(f.size/1024).toFixed(1)} КБ)</span></div>
+    <div class="stat-row"><span class="sk">Тип браузера</span><span class="sv">${f.type||'—'}</span></div>
+    <div class="stat-row"><span class="sk">Формат (magic)</span><span class="sv">${fmt}</span></div>
+    <div class="stat-row"><span class="sk">Magic hex</span><span class="sv">${bytesHex(magic)}</span></div>
+    <div class="section-sep"></div>
+    <div class="result-label">ХЕШИ</div>
+    <div class="stat-row"><span class="sk">MD5</span><span class="sv" style="font-size:10px">${md}</span></div>
+    <div class="stat-row"><span class="sk">SHA-256</span><span class="sv" style="font-size:10px">${sha.slice(0,32)}...</span></div>
+    <div class="section-sep"></div>
+    <div class="result-label">ЭНТРОПИЯ</div>
+    <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${(ent/8*100).toFixed(1)}%"></div></div></div>
+    <div class="stat-row"><span class="sk">Значение</span><span class="sv">${ent.toFixed(4)} / 8.0 бит</span></div>
+    <div class="stat-row"><span class="sk">Оценка</span><span class="sv" style="color:${ent>7.5?'var(--warn)':'var(--success)'}">${ent>7.5?'⚠ Высокая (подозрительно)':'✓ Нормальная'}</span></div>
+    <div class="section-sep"></div>
+    <div class="result-label">ИНТЕРЕСНЫЕ СТРОКИ</div>
+    ${interesting.length ? interesting.slice(0,8).map(s=>`<div style="font-size:12px;color:var(--warn);word-break:break-all;padding:3px 0">⚠ ${s.slice(0,120)}</div>`).join('') : '<div style="font-size:13px;color:var(--muted)">Подозрительных строк не найдено</div>'}
+    `;
+  } catch(e) { showResult('❌ Ошибка: '+e.message,'err'); }
+  toggleSpinner('meta-spin', false);
+}
+
+// ═══════════════════════════════
+//  TOOL: LSB MAP
+// ═══════════════════════════════
+function renderLsbMap(c) {
+  c.innerHTML = `
+  <div class="tool-title">🗺️ LSB-карта</div>
+  <div class="tool-subtitle">Визуализация LSB-слоя изображения</div>
+  <div class="field"><label>ИЗОБРАЖЕНИЕ</label>
+    <div class="upload-zone" onclick="document.getElementById('lm-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">Нажми для выбора</div>
+      <div class="uz-name" id="lm-img-name">—</div>
+      <input type="file" id="lm-img" accept="image/*" onchange="previewImg(this,'lm-img-name','lm-preview')">
+    </div>
+    <img id="lm-preview" style="display:none;width:100%;margin-top:8px;border-radius:10px" alt="">
+  </div>
+  <div class="field"><label>КАНАЛ</label>
+    <select id="lm-ch"><option value="0">R — Красный</option><option value="1">G — Зелёный</option><option value="2">B — Синий</option></select>
+  </div>
+  <button class="btn btn-primary" onclick="doLsbMap()">
+    <span id="lm-spin" class="spinner"></span>
+    🗺️ Создать LSB-карту
+  </button>
+  <div id="result-box"></div>
+  <div id="lm-canvas-wrap" style="margin-top:12px;display:none">
+    <canvas id="lm-canvas" style="width:100%;border-radius:10px;image-rendering:pixelated"></canvas>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="downloadLsbMap()">⬇️ Скачать</button>
+  </div>`;
+}
+
+async function doLsbMap() {
+  const f = document.getElementById('lm-img').files[0];
+  const ch = parseInt(document.getElementById('lm-ch').value);
+  if (!f) { showToast('❌ Выбери изображение'); return; }
+  toggleSpinner('lm-spin', true);
+  try {
+    const { imageData, width, height } = await loadImageData(f);
+    const px = imageData.data;
+    const out = new Uint8ClampedArray(px.length);
+    for (let i=0;i<px.length;i+=4){
+      const v = (px[i+ch]&1)*255;
+      out[i]=v; out[i+1]=v; out[i+2]=v; out[i+3]=255;
+    }
+    const c2 = document.getElementById('lm-canvas');
+    c2.width=width; c2.height=height;
+    c2.getContext('2d').putImageData(new ImageData(out,width,height),0,0);
+    document.getElementById('lm-canvas-wrap').style.display='block';
+    showResult('✅ LSB-карта готова!\nЧёрный = бит 0, Белый = бит 1\nПаттерны или блоки = признаки стего\nРавномерный шум = скорее всего чисто', 'ok');
+  } catch(e) { showResult('❌ Ошибка: '+e.message,'err'); }
+  toggleSpinner('lm-spin', false);
+}
+
+async function downloadLsbMap() {
+  const c2 = document.getElementById('lm-canvas');
+  const blob = await canvasToBlob(c2);
+  downloadBlob(blob, 'lsb_map.png');
+}
+
+// ═══════════════════════════════
+//  TOOL: IMAGE DIFF
+// ═══════════════════════════════
+function renderDiff(c) {
+  c.innerHTML = `
+  <div class="tool-title">🔀 Image Diff</div>
+  <div class="tool-subtitle">Попиксельное сравнение двух изображений</div>
+  <div class="field"><label>ПЕРВОЕ (оригинал)</label>
+    <div class="upload-zone" onclick="document.getElementById('da-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">Изображение A</div>
+      <div class="uz-name" id="da-img-name">—</div>
+      <input type="file" id="da-img" accept="image/*" onchange="previewImg(this,'da-img-name',null)">
+    </div>
+  </div>
+  <div class="field"><label>ВТОРОЕ (стего/изменённое)</label>
+    <div class="upload-zone" onclick="document.getElementById('db-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">Изображение B</div>
+      <div class="uz-name" id="db-img-name">—</div>
+      <input type="file" id="db-img" accept="image/*" onchange="previewImg(this,'db-img-name',null)">
+    </div>
+  </div>
+  <div class="field"><label>УСИЛЕНИЕ (1–100)</label><input type="text" id="diff-amp" value="20" placeholder="20"></div>
+  <button class="btn btn-primary" onclick="doDiff()">
+    <span id="diff-spin" class="spinner"></span>
+    🔀 Сравнить
+  </button>
+  <div id="result-box"></div>
+  <div id="diff-result" style="margin-top:12px;display:none">
+    <canvas id="diff-canvas" style="width:100%;border-radius:10px"></canvas>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="downloadDiff()">⬇️ Скачать diff</button>
+  </div>`;
+}
+
+async function doDiff() {
+  const fa = document.getElementById('da-img').files[0];
+  const fb = document.getElementById('db-img').files[0];
+  const amp = parseInt(document.getElementById('diff-amp').value)||20;
+  if (!fa||!fb) { showToast('❌ Выбери оба изображения'); return; }
+  toggleSpinner('diff-spin', true);
+  try {
+    const a = await loadImageData(fa);
+    const b = await loadImageData(fb);
+    const w = Math.min(a.width, b.width), h = Math.min(a.height, b.height);
+    const pa = a.imageData.data, pb = b.imageData.data;
+    const out = new Uint8ClampedArray(w*h*4);
+    let changed=0, maxD=0, sumD=0;
+    for (let y=0;y<h;y++) for (let x=0;x<w;x++) {
+      const i=(y*a.width+x)*4, oi=(y*w+x)*4;
+      const dr=Math.abs(pa[i]-pb[i]), dg=Math.abs(pa[i+1]-pb[i+1]), db2=Math.abs(pa[i+2]-pb[i+2]);
+      if(dr||dg||db2)changed++;
+      maxD=Math.max(maxD,dr,dg,db2);
+      sumD+=dr+dg+db2;
+      out[oi]=Math.min(dr*amp,255); out[oi+1]=Math.min(dg*amp,255); out[oi+2]=Math.min(db2*amp,255); out[oi+3]=255;
+    }
+    const dc = document.getElementById('diff-canvas');
+    dc.width=w; dc.height=h;
+    dc.getContext('2d').putImageData(new ImageData(out,w,h),0,0);
+    document.getElementById('diff-result').style.display='block';
+    const total=w*h, mean=(sumD/(total*3)).toFixed(4);
+    showResult(`✅ Diff готов (усиление ×${amp})\n📊 Изменено пикселей: ${changed.toLocaleString()} из ${total.toLocaleString()} (${(changed/total*100).toFixed(3)}%)\n📏 Макс. отклонение: ${maxD}\n📉 Среднее: ${mean}${maxD<=1?'\n⚠ Разница только 1 бит — классический след LSB!':(maxD<=5?'\nℹ Небольшая разница — возможно LSB':'')}`, maxD<=1?'warn':'ok');
+  } catch(e) { showResult('❌ Ошибка: '+e.message,'err'); }
+  toggleSpinner('diff-spin', false);
+}
+
+async function downloadDiff() {
+  const blob = await canvasToBlob(document.getElementById('diff-canvas'));
+  downloadBlob(blob, 'diff.png');
+}
+
+// ═══════════════════════════════
+//  TOOL: BIT PLANE
+// ═══════════════════════════════
+function renderBitPlane(c) {
+  c.innerHTML = `
+  <div class="tool-title">🧮 Bit Plane Viewer</div>
+  <div class="tool-subtitle">Все 24 бит-плейна (8 бит × 3 канала)</div>
+  <div class="field"><label>ИЗОБРАЖЕНИЕ</label>
+    <div class="upload-zone" onclick="document.getElementById('bp-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">Нажми для выбора</div>
+      <div class="uz-name" id="bp-img-name">—</div>
+      <input type="file" id="bp-img" accept="image/*" onchange="previewImg(this,'bp-img-name',null)">
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="doBitPlane()">
+    <span id="bp-spin" class="spinner"></span>
+    🧮 Просмотреть плейны
+  </button>
+  <div id="result-box"></div>
+  <div id="bp-canvases" style="display:none;margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div>`;
+}
+
+async function doBitPlane() {
+  const f = document.getElementById('bp-img').files[0];
+  if (!f) { showToast('❌ Выбери изображение'); return; }
+  toggleSpinner('bp-spin', true);
+  const wrap = document.getElementById('bp-canvases');
+  wrap.innerHTML = ''; wrap.style.display='grid';
+  try {
+    const { imageData, width, height } = await loadImageData(f);
+    const px = imageData.data;
+    const chNames = ['R','G','B'];
+    const chColors = ['#e74c3c','#27ae60','#3498db'];
+    for (let ci=0;ci<3;ci++) for (let bit=0;bit<8;bit++) {
+      const out = new Uint8ClampedArray(width*height*4);
+      for (let i=0;i<width*height;i++) {
+        const v = ((px[i*4+ci]>>bit)&1)*255;
+        out[i*4]=v; out[i*4+1]=v; out[i*4+2]=v; out[i*4+3]=255;
+      }
+      const cvs = document.createElement('canvas');
+      cvs.width=width; cvs.height=height;
+      cvs.getContext('2d').putImageData(new ImageData(out,width,height),0,0);
+      cvs.style.cssText='width:100%;border-radius:4px;image-rendering:pixelated;cursor:pointer';
+      const lbl = document.createElement('div');
+      lbl.style.cssText=`font-size:10px;text-align:center;margin-top:2px;color:${chColors[ci]}`;
+      lbl.textContent=`${chNames[ci]} bit${bit}`;
+      const wr = document.createElement('div');
+      const name = `${chNames[ci]}_bit${bit}.png`;
+      cvs.onclick = async () => { const b = await canvasToBlob(cvs); downloadBlob(b, name); };
+      cvs.title = `Нажми чтобы скачать ${name}`;
+      wr.appendChild(cvs); wr.appendChild(lbl);
+      wrap.appendChild(wr);
+    }
+    showResult('✅ 24 бит-плейна загружены!\n🖱 Нажми на плейн для скачивания\n💡 bit0 = LSB, bit7 = MSB (силуэт)\n💡 Аномалии в bit0 — признак стего', 'ok');
+  } catch(e) { showResult('❌ Ошибка: '+e.message,'err'); }
+  toggleSpinner('bp-spin', false);
+}
+
+// ═══════════════════════════════
+//  TOOL: XOR BRUTEFORCE
+// ═══════════════════════════════
+function renderXorBrute(c) {
+  c.innerHTML = `
+  <div class="tool-title">⚡ XOR Брутфорс</div>
+  <div class="tool-subtitle">Взлом XOR-ключа по известному тексту</div>
+  <div class="field"><label>ИЗОБРАЖЕНИЕ С ЗАШИФРОВАННЫМ СООБЩЕНИЕМ</label>
+    <div class="upload-zone" onclick="document.getElementById('xb-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">PNG с XOR-сообщением</div>
+      <div class="uz-name" id="xb-img-name">—</div>
+      <input type="file" id="xb-img" accept="image/*" onchange="previewImg(this,'xb-img-name',null)">
+    </div>
+  </div>
+  <div class="field"><label>ИЗВЕСТНЫЙ ФРАГМЕНТ ОТКРЫТОГО ТЕКСТА</label><input type="text" id="xb-kp" placeholder="Например: flag{ или CTF"></div>
+  <div class="field"><label>МАКС. ДЛИНА КЛЮЧА (1-5, осторожно: >3 долго!)</label>
+    <select id="xb-ml"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4 (медленно)</option><option value="5">5 (очень медленно)</option></select>
+  </div>
+  <button class="btn btn-danger" onclick="doXorBrute()">
+    <span id="xb-spin" class="spinner"></span>
+    ⚡ Начать брутфорс
+  </button>
+  <div id="result-box"></div>`;
+}
+
+async function doXorBrute() {
+  const f = document.getElementById('xb-img').files[0];
+  const kp = document.getElementById('xb-kp').value;
+  const ml = parseInt(document.getElementById('xb-ml').value);
+  if (!f || !kp) { showToast('❌ Выбери файл и введи известный текст'); return; }
+  toggleSpinner('xb-spin', true);
+  showResult('⚡ Подбираю ключ...\nЭто может занять время.', 'warn');
+
+  // Небольшая задержка чтобы UI обновился
+  await new Promise(r => setTimeout(r, 100));
+
+  try {
+    const { imageData } = await loadImageData(f);
+    const px = imageData.data;
+    const bits = extractBits(px, Math.min(px.length/4*3, 10000*8), 3);
+    const raw = bitsToBytes(bits);
+    if (!arrEq(raw, MAGIC_TEXT)) {
+      showResult('❌ TEXT-сигнатура не найдена.', 'err');
+      toggleSpinner('xb-spin', false); return;
+    }
+    if (!raw[5]) { showResult('⚠️ Сообщение не зашифровано XOR.', 'warn'); toggleSpinner('xb-spin', false); return; }
+    const len = (raw[6]<<24)|(raw[7]<<16)|(raw[8]<<8)|raw[9];
+    const cipher = raw.slice(10, 10 + Math.min(len, 200));
+    const kpBytes = new TextEncoder().encode(kp);
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*_-+=';
+    const found = [];
+    let checked = 0;
+
+    function tryKey(keyArr) {
+      const dec = new Uint8Array(cipher.length);
+      for (let i=0;i<cipher.length;i++) dec[i] = cipher[i] ^ keyArr[i%keyArr.length];
+      for (let s=0;s<dec.length-kpBytes.length+1;s++) {
+        let match = true;
+        for (let k=0;k<kpBytes.length;k++) { if(dec[s+k]!==kpBytes[k]){match=false;break;} }
+        if (match) return dec;
+      }
+      return null;
+    }
+
+    function bruteLen(keyLen, prefix) {
+      for (const ch of charset) {
+        const cur = [...prefix, ch.charCodeAt(0)];
+        if (cur.length === keyLen) {
+          checked++;
+          const dec = tryKey(cur);
+          if (dec) {
+            const key = String.fromCharCode(...cur);
+            let txt = '';
+            try { txt = new TextDecoder('utf-8',{fatal:true}).decode(dec); } catch {}
+            found.push({ key, txt });
+            if (found.length >= 5) return true;
+          }
+        } else {
+          if (bruteLen(keyLen, cur)) return true;
+        }
+      }
+      return false;
+    }
+
+    for (let kl=1; kl<=ml && found.length<5; kl++) bruteLen(kl, []);
+
+    if (found.length) {
+      showResult(`✅ Найдено ${found.length} совпадений!\n\n` +
+        found.map(r=>`🔑 Ключ: "${r.key}"\n💬 ${r.txt.slice(0,150)}`).join('\n\n'), 'ok');
+    } else {
+      showResult(`❌ Ключ не найден (проверено ${checked.toLocaleString()} вариантов).\nПопробуй увеличить длину или уточнить текст.`, 'warn');
+    }
+  } catch(e) { showResult('❌ Ошибка: '+e.message,'err'); }
+  toggleSpinner('xb-spin', false);
+}
+
+// ═══════════════════════════════
+//  TOOL: SCANNER
+// ═══════════════════════════════
+function renderScanner(c) {
+  c.innerHTML = `
+  <div class="tool-title">📡 Сканер файлов</div>
+  <div class="tool-subtitle">Batch-анализ нескольких изображений</div>
+  <div class="field"><label>ВЫБЕРИ НЕСКОЛЬКО ИЗОБРАЖЕНИЙ</label>
+    <div class="upload-zone" onclick="document.getElementById('sc-imgs').click()">
+      <div class="uz-icon">📂</div><div class="uz-text">Выбрать несколько файлов</div>
+      <div class="uz-name" id="sc-imgs-name">—</div>
+      <input type="file" id="sc-imgs" accept="image/*" multiple onchange="document.getElementById('sc-imgs-name').textContent=this.files.length+' файлов выбрано'">
+    </div>
+  </div>
+  <button class="btn btn-danger" onclick="doScan()">
+    <span id="sc-spin" class="spinner"></span>
+    📡 Сканировать всё
+  </button>
+  <div id="result-box"></div>
+  <div id="sc-list" style="margin-top:12px"></div>`;
+}
+
+async function doScan() {
+  const files = document.getElementById('sc-imgs').files;
+  if (!files.length) { showToast('❌ Выбери хотя бы один файл'); return; }
+  toggleSpinner('sc-spin', true);
+  document.getElementById('sc-list').innerHTML = '';
+  showResult(`🔍 Сканирую ${files.length} файлов...`, 'warn');
+
+  const results = [];
+  for (const f of files) {
+    try {
+      const { imageData } = await loadImageData(f);
+      const px = imageData.data;
+      const R=[]; for (let i=0;i<px.length;i+=4) R.push(px[i]);
+      const { chi2 } = chiSquareTest(R);
+      const bits = extractBits(px, 80, 3);
+      const hdr = bitsToBytes(bits);
+      const hasSig = arrEq(hdr,MAGIC_TEXT)||arrEq(hdr,MAGIC_FILE);
+      results.push({ name: f.name, chi2, hasSig, suspicious: hasSig||chi2<1.5 });
+    } catch { results.push({ name: f.name, chi2: 999, hasSig: false, suspicious: false }); }
+  }
+
+  results.sort((a,b) => (b.hasSig-a.hasSig)||(a.chi2-b.chi2));
+
+  const list = document.getElementById('sc-list');
+  const suspicious = results.filter(r=>r.suspicious);
+  showResult(`📊 Всего: ${results.length} | ⚠ Подозрительных: ${suspicious.length}`, suspicious.length?'warn':'ok');
+
+  for (const r of results) {
+    const d = document.createElement('div');
+    d.className='scan-item';
+    d.innerHTML=`
+    <div class="scan-dot" style="background:${r.hasSig?'var(--danger)':r.suspicious?'var(--warn)':'var(--success)'}"></div>
+    <div class="scan-name">${r.name}</div>
+    <div class="scan-chi">${r.hasSig?'SIG!':'χ²='+r.chi2.toFixed(2)}</div>`;
+    list.appendChild(d);
+  }
+  toggleSpinner('sc-spin', false);
+}
+
+// ═══════════════════════════════
+//  TOOL: HTML REPORT
+// ═══════════════════════════════
+function renderHtmlReport(c) {
+  c.innerHTML = `
+  <div class="tool-title">📋 HTML-отчёт</div>
+  <div class="tool-subtitle">Экспорт полного анализа в HTML</div>
+  <div class="field"><label>ИЗОБРАЖЕНИЕ ДЛЯ ОТЧЁТА</label>
+    <div class="upload-zone" onclick="document.getElementById('hr-img').click()">
+      <div class="uz-icon">🖼️</div><div class="uz-text">PNG/JPG изображение</div>
+      <div class="uz-name" id="hr-img-name">—</div>
+      <input type="file" id="hr-img" accept="image/*" onchange="previewImg(this,'hr-img-name','hr-preview')">
+    </div>
+    <img id="hr-preview" style="display:none;width:100%;margin-top:8px;border-radius:10px" alt="">
+  </div>
+  <button class="btn btn-success" onclick="doHtmlReport()">
+    <span id="hr-spin" class="spinner"></span>
+    📋 Создать HTML-отчёт
+  </button>
+  <div id="result-box"></div>`;
+}
+
+async function doHtmlReport() {
+  const f = document.getElementById('hr-img').files[0];
+  if (!f) { showToast('❌ Выбери изображение'); return; }
+  toggleSpinner('hr-spin', true);
+  try {
+    const ab = await readFileAsArrayBuffer(f);
+    const u8 = new Uint8Array(ab);
+    const dataUrl = await readFileAsDataURL(f);
+    const sha = await sha256hex(ab);
+    const md = await md5hex(u8);
+    const { imageData, width, height } = await loadImageData(f);
+    const px = imageData.data;
+    const R=[],G=[],B=[];
+    for (let i=0;i<px.length;i+=4){R.push(px[i]);G.push(px[i+1]);B.push(px[i+2]);}
+    const chR=chiSquareTest(R),chG=chiSquareTest(G),chB=chiSquareTest(B);
+    const avg=(chR.chi2+chG.chi2+chB.chi2)/3;
+    const ent=calcEntropy([...u8]);
+    const bits=extractBits(px,80,3);
+    const hdr=bitsToBytes(bits);
+    const hasTxt=arrEq(hdr,MAGIC_TEXT),hasFile=arrEq(hdr,MAGIC_FILE);
+    const verdict=avg<1?'⚠ ВЫСОКАЯ ВЕРОЯТНОСТЬ СТЕГО':avg<3?'? УМЕРЕННОЕ ПОДОЗРЕНИЕ':'✓ ЧИСТО';
+    const vc=avg<1?'#ff5252':avg<3?'#ffb300':'#00e676';
+
+    const lsbR=R.filter(v=>v&1).length/R.length;
+    const lsbG=G.filter(v=>v&1).length/G.length;
+    const lsbB=B.filter(v=>v&1).length/B.length;
+
+    const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>KEY MASTER Report — ${f.name}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:monospace;background:#0a0a0f;color:#f0eeff;padding:20px}
+h1{color:#7c4dff;margin-bottom:20px;font-size:20px}h2{color:#00e5ff;font-size:12px;letter-spacing:2px;margin:16px 0 8px;text-transform:uppercase}
+.card{background:#1a1a26;border:1px solid rgba(120,80,255,0.2);border-radius:12px;padding:14px;margin-bottom:12px}
+.verdict{font-size:18px;font-weight:bold;padding:14px;border:2px solid ${vc};color:${vc};text-align:center;border-radius:10px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:12px}td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,0.05)}
+td:first-child{color:#8888aa;width:35%}img{max-width:100%;border-radius:8px}
+.bar-bg{background:#12121a;height:8px;border-radius:4px;margin:4px 0}
+.bar-fill{height:100%;border-radius:4px}
+footer{margin-top:20px;color:#8888aa;font-size:11px;border-top:1px solid rgba(255,255,255,0.05);padding-top:10px}
+</style></head><body>
+<h1>🔐 KEY MASTER v2.0 — Отчёт</h1>
+<p style="color:#8888aa;margin-bottom:16px">Файл: <b style="color:#fff">${f.name}</b> | ${new Date().toLocaleString()}</p>
+<div class="verdict">${verdict}</div>
+<div class="card"><img src="${dataUrl}" alt="${f.name}">
+<h2>Файл</h2><table>
+<tr><td>Размер</td><td>${width}×${height} px</td></tr>
+<tr><td>Байт</td><td>${f.size.toLocaleString()}</td></tr>
+<tr><td>Тип</td><td>${f.type||'—'}</td></tr>
+</table></div>
+<div class="card"><h2>Хеши</h2><table>
+<tr><td>MD5</td><td style="word-break:break-all;font-size:11px">${md}</td></tr>
+<tr><td>SHA-256</td><td style="word-break:break-all;font-size:11px">${sha}</td></tr>
+</table></div>
+<div class="card"><h2>Chi-Square (LSB)</h2><table>
+<tr><td>R</td><td>χ²=${chR.chi2.toFixed(4)}<div class="bar-bg"><div class="bar-fill" style="width:${Math.min(chR.chi2/10*100,100).toFixed(0)}%;background:#e74c3c"></div></div></td></tr>
+<tr><td>G</td><td>χ²=${chG.chi2.toFixed(4)}<div class="bar-bg"><div class="bar-fill" style="width:${Math.min(chG.chi2/10*100,100).toFixed(0)}%;background:#27ae60"></div></div></td></tr>
+<tr><td>B</td><td>χ²=${chB.chi2.toFixed(4)}<div class="bar-bg"><div class="bar-fill" style="width:${Math.min(chB.chi2/10*100,100).toFixed(0)}%;background:#3498db"></div></div></td></tr>
+<tr><td><b>Среднее</b></td><td><b>${avg.toFixed(4)}</b></td></tr>
+</table></div>
+<div class="card"><h2>LSB-распределение</h2><table>
+<tr><td>R</td><td>${(lsbR*100).toFixed(1)}% единиц<div class="bar-bg"><div class="bar-fill" style="width:${(lsbR*100).toFixed(1)}%;background:#e74c3c"></div></div></td></tr>
+<tr><td>G</td><td>${(lsbG*100).toFixed(1)}% единиц<div class="bar-bg"><div class="bar-fill" style="width:${(lsbG*100).toFixed(1)}%;background:#27ae60"></div></div></td></tr>
+<tr><td>B</td><td>${(lsbB*100).toFixed(1)}% единиц<div class="bar-bg"><div class="bar-fill" style="width:${(lsbB*100).toFixed(1)}%;background:#3498db"></div></div></td></tr>
+</table></div>
+<div class="card"><h2>Энтропия</h2><table>
+<tr><td>Значение</td><td>${ent.toFixed(4)} / 8.0 бит</td></tr>
+<tr><td>Оценка</td><td style="color:${ent>7.5?'#ffb300':'#00e676'}">${ent>7.5?'⚠ Высокая':'✓ Нормальная'}</td></tr>
+</table></div>
+<div class="card"><h2>Сигнатуры</h2><table>
+<tr><td>TEXT (0xDEADBEEF)</td><td style="color:${hasTxt?'#ff5252':'#00e676'}">${hasTxt?'⚠ НАЙДЕНА':'✓ Нет'}</td></tr>
+<tr><td>FILE (0xCAFEBABE)</td><td style="color:${hasFile?'#ff5252':'#00e676'}">${hasFile?'⚠ НАЙДЕНА':'✓ Нет'}</td></tr>
+</table></div>
+<footer>Сгенерировано KEY MASTER v2.0 | CTF &amp; OSINT Steganography Toolkit</footer>
+</body></html>`;
+
+    downloadText(html, 'keymaster_report_' + f.name.replace(/\.[^.]+$/,'') + '.html');
+    showResult('✅ HTML-отчёт создан и скачан!', 'ok');
+  } catch(e) { showResult('❌ Ошибка: '+e.message,'err'); }
+  toggleSpinner('hr-spin', false);
+}
+
+// ═══════════════════════════════
+//  SHARED HELPERS
+// ═══════════════════════════════
+function showResult(msg, type='ok') {
+  const rb = document.getElementById('result-box');
+  if (!rb) return;
+  rb.style.display = 'block';
+  rb.className = 'result-box result-' + type;
+  rb.innerHTML = `<div class="result-label">РЕЗУЛЬТАТ</div><div class="result-text">${msg.replace(/\n/g,'<br>')}</div>`;
+}
+
+function toggleSpinner(id, on) {
+  const s = document.getElementById(id);
+  if (s) s.style.display = on ? 'block' : 'none';
+}
+
+function previewImg(input, nameId, previewId) {
+  const f = input.files[0];
+  if (!f) return;
+  document.getElementById(nameId).textContent = f.name;
+  if (previewId) {
+    const pr = document.getElementById(previewId);
+    if (pr) { const url = URL.createObjectURL(f); pr.src=url; pr.style.display='block'; }
+  }
+}
+
+function arrEq(arr, magic) {
+  for (let i=0;i<magic.length;i++) if(arr[i]!==magic[i]) return false;
+  return true;
+}
+
+function bytesHex(arr) {
+  return Array.from(arr).map(b=>b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+}
+
+// ═══════════════════════════════
+//  PWA MANIFEST (inline)
+// ═══════════════════════════════
+const manifestData = {
+  name: "KEY MASTER",
+  short_name: "KEY MASTER",
+  description: "CTF & OSINT Steganography Toolkit",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#0a0a0f",
+  theme_color: "#0a0a0f",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIgMTkyJz48cmVjdCB3aWR0aD0nMTkyJyBoZWlnaHQ9JzE5MicgZmlsbD0nIzBhMGEwZicgcng9JzMyJy8+PHRleHQgeT0nMTMwJyB4PSczMicgZm9udC1zaXplPScxMjAnPvCfkpA8L3RleHQ+PC9zdmc+", sizes: "192x192", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+</script>
+</body>
+</html>
